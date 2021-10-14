@@ -1,0 +1,128 @@
+: FILTER-TEST-SIMPLE
+$* --benchmark_filter="Foo" 3 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-SIMPLE-NEGATIVE
+$* --benchmark_filter="-Foo" 2 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-SUFFIX
+$* --benchmark_filter="BM_.*" 4 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-SUFFIX-NEGATIVE
+$* --benchmark_filter="-BM_.*" 1 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-REGEX-ALL
+$* --benchmark_filter=".*" 5 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-REGEX-ALL-NEGATIVE
+$* --benchmark_filter="-.*" 0 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-REGEX-BLANK
+$* --benchmark_filter="" 5 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-REGEX-BLANK-NEGATIVE
+$* --benchmark_filter="-" 0 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-REGEX-NONE
+$* --benchmark_filter="monkey" 0 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-REGEX-NONE-NEGATIVE
+$* --benchmark_filter="-monkey" 5 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-WILDCARD
+$* --benchmark_filter=".*Foo.*" 3 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-WILDCARD-NEGATIVE
+$* --benchmark_filter="-.*Foo.*" 2 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-BEGIN
+$* --benchmark_filter="^BM_.*" 4 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-BEGIN-NEGATIVE
+$* --benchmark_filter="-^BM_.*" 1 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-BEGIN2
+$* --benchmark_filter="^N" 1 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-BEGIN2-NEGATIVE
+$* --benchmark_filter="-^N" 4 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-REGEX-END
+: Regex end collides with program name so escape it
+$* --benchmark_filter=".*Ba\$" 1 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+
+: FILTER-TEST-REGEX-END-NEGATIVE
+: Regex end collides with program name so escape it
+$* --benchmark_filter="-.*Ba\$" 4 1>- 2>>~%EOM%
+%(
+%((?!ERROR:).)*%
+%)*
+EOM
+

@@ -1,0 +1,30 @@
+import libs = google-benchmark%lib{benchmark}
+
+output_helper_path = [dir_path] ./google-benchmark-internal/output_test_helper/
+include $output_helper_path
+
+basic_tests = benchmark_test \
+              filter_test \
+              options_test \
+              basic_test \
+              repetitions_test \
+              diagnostics_test \
+              skip_with_error_test \
+              donotoptimize_test \
+              fixture_test \
+              register_benchmark_test \
+              map_test \
+              multiple_ranges_test \
+              args_product_test
+
+for n : $basic_tests
+{
+  ./: exe{$n}: cxx{$n} $libs
+  exe{$n}: test.options += --benchmark_min_time=0.01
+}
+
+exe{filter_test}: testscript{filter_test}
+exe{repetitions_test}: $output_helper_path/liba{output_test_helper}
+exe{repetitions_test}: test.options += --repetitions=3
+
+cxx.poptions += "-I$src_base"
