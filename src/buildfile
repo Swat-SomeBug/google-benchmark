@@ -24,7 +24,7 @@ cxx.libs =  -lpthread
 
 # Export options.
 #
-lib{benchmark}:
+lib{benchmark*}:
 {
   cxx.export.poptions = "-I$out_root" "-I$src_root" "-I$src_base/$pub"
   cxx.export.libs = $intf_libs
