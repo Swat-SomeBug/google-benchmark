@@ -2,7 +2,6 @@ intf_libs = # Interface dependencies.
 impl_libs = # Implementation dependencies.
 #import impl_libs += libhello%lib{hello}
 
-
 ./: lib{benchmark} liba{benchmark-main}
 
 pub = [dir_path] ../include
@@ -18,16 +17,20 @@ cxx.poptions =+ "-I$out_root" "-I$src_root" "-I$src_base/$pub"
 obja{*}: cxx.poptions += -DGOOGLE_BENCHMARK_STATIC_BUILD
 objs{*}: cxx.poptions += -DGOOGLE_BENCHMARK_SHARED_BUILD
 
+extra_libs =
+if($cxx.target.class == 'linux')
+  extra_libs += -lrt -lpthread
+elif ($cxx.target.class == 'macos')
+  extra_libs += -lpthread
 
-# Very bad way to link
-cxx.libs =  -lpthread
+cxx.libs = $extra_libs
 
 # Export options.
 #
 lib{benchmark*}:
 {
   cxx.export.poptions = "-I$out_root" "-I$src_root" "-I$src_base/$pub"
-  cxx.export.libs = $intf_libs
+  cxx.export.libs = $intf_libs $extra_libs
 }
 
 liba{benchmark}: cxx.export.poptions += -DGOOGLE_BENCHMARK_STATIC
