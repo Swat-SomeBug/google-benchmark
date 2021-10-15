@@ -18,7 +18,7 @@ liba{benchmark-main}: cxx{benchmark_main} lib{benchmark}
 #
 patched_options = 
 if($cxx.id == 'gcc' || $cxx.id == 'mingw')
-  patched_options = -D__NO_COUNTER_INC_TEST
+  patched_options = -D_NO_COUNTER_INC_TEST
 
 cxx.poptions =+ "-I$out_root/include" "-I$src_root/include" $patched_options
 
