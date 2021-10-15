@@ -17,8 +17,8 @@ liba{benchmark-main}: cxx{benchmark_main} lib{benchmark}
 # There is a documented issue with flag and __COUNTER__ (used to gen unique ids)
 #
 patched_options = -D__COUNTER_INC_TEST='(__COUNTER__ + 1 == __COUNTER__ + 0)'
-if($cxx.target.system == 'gcc' || $cxx.target.system == 'mingw')
-  patched_options = -D__COUNTER_INC_TEST=''
+if($cxx.id== 'gcc' || $cxx.id == 'mingw')
+  patched_options = -D__COUNTER_INC_TEST=1
 
 cxx.poptions =+ "-I$out_root/include" "-I$src_root/include" $patched_options
 
