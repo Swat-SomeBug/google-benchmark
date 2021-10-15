@@ -1,9 +1,19 @@
-pub_hdrs = h{*}
 
+
+benchmark/hxx{benchmark}: benchmark/hxx{benchmark_orig}
+{{
+  diag patch $<
+  sed -e 's/\(__COUNTER__ \+ 1 == __COUNTER__ \+ 0\)/__COUNTER_INC_TEST/' $path($<) > $path($>)
+}}
+
+pub_hdrs = benchmark/hxx{benchmark}
 ./: $pub_hdrs
 
-h{*}:
+
+hxx{*}:
 {
   install = include/
   install.subdir = true
 }
+
+hxx{* -benchmark/benchmark_orig}: install = false
