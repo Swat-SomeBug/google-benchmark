@@ -1,9 +1,34 @@
-
+#----------------------------------------------------------------------
+# Patching bechmark.h to make google-benchmark work with build2 and gcc
+# Issue:
+# -> gcc errors out if macros are expanded when -fdirectives_only is used
+# -> build2 passes this flag for the header extraction
+# -> Public file used by other consumers, cannot turn off header extraction
+#    everywhere
+# Solution: Patch header to disable the check based on additional macro
+#----------------------------------------------------------------------
 
 benchmark/hxx{benchmark}: benchmark/hxx{benchmark_orig}
 {{
   diag patch $<
-  sed -e 's/\(__COUNTER__ \+ 1 == __COUNTER__ \+ 0\)/__COUNTER_INC_TEST/' $path($<) > $path($>)
+
+  # Replace main part but leave a tag in
+  sed -e 's/#if defined\(__COUNTER__\) \&\& \(__COUNTER__ \+ 1 == __COUNTER__ \+ 0\)/#ifndef _NO_COUNTER_INC_TEST \
+#if defined\(__COUNTER__\) \&\& \(__COUNTER__ + 1 == __COUNTER__ + 0\)\
+#define BENCHMARK_PRIVATE_UNIQUE_ID __COUNTER__
+#else
+#define BUILD2_CUSTOM_STRING_WHICH_NEEDS_REPLACING_IS_HOPEFULLY_LONG_ENOUGH
+#endif
+#else
+#if defined\(__COUNTER__\)/' $path($<) > $path($>) 
+
+  # Get the endif correct
+  sed -i -e 's%#define BENCHMARK_PRIVATE_UNIQUE_ID __LINE__%#define BENCHMARK_PRIVATE_UNIQUE_ID __LINE__\
+#endif%' $path($>)
+
+  # Remove inserted tag
+  sed -i -e 's%BUILD2_CUSTOM_STRING_WHICH_NEEDS_REPLACING_IS_HOPEFULLY_LONG_ENOUGH%BENCHMARK_PRIVATE_UNIQUE_ID __LINE__%' $path($>)
+
 }}
 
 pub_hdrs = benchmark/hxx{benchmark}

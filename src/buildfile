@@ -16,9 +16,9 @@ liba{benchmark-main}: cxx{benchmark_main} lib{benchmark}
 # Currently gcc errrors when -fdirectives_only is used to extract header info
 # There is a documented issue with flag and __COUNTER__ (used to gen unique ids)
 #
-patched_options = -D__COUNTER_INC_TEST='(__COUNTER__ + 1 == __COUNTER__ + 0)'
-if($cxx.id== 'gcc' || $cxx.id == 'mingw')
-  patched_options = -D__COUNTER_INC_TEST=1
+patched_options = 
+if($cxx.id == 'gcc' || $cxx.id == 'mingw')
+  patched_options = -D__NO_COUNTER_INC_TEST
 
 cxx.poptions =+ "-I$out_root/include" "-I$src_root/include" $patched_options
 
