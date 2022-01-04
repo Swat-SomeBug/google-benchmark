@@ -10,17 +10,7 @@ pub_hdrs = $pub/{$pub_hdrs}
 lib{benchmark}: cxx{* -benchmark_main} hxx{*} $pub/$pub_hdrs
 liba{benchmark-main}: cxx{benchmark_main} lib{benchmark}
 
-# Build options.
-#
-# We patch benchmark/benchmark.h compared to upstream for gcc
-# Currently gcc errrors when -fdirectives_only is used to extract header info
-# There is a documented issue with flag and __COUNTER__ (used to gen unique ids)
-#
-patched_options = 
-if($cxx.id == 'gcc' || $cxx.id == 'mingw')
-  patched_options = -D_NO_COUNTER_INC_TEST
-
-cxx.poptions =+ "-I$out_root/include" "-I$src_root/include" $patched_options
+cxx.poptions =+ "-I$out_root/include" "-I$src_root/include" 
 
 obja{*}: cxx.poptions += -DGOOGLE_BENCHMARK_STATIC_BUILD
 objs{*}: cxx.poptions += -DGOOGLE_BENCHMARK_SHARED_BUILD
@@ -37,7 +27,7 @@ cxx.libs = $extra_libs
 #
 lib{benchmark*}:
 {
-  cxx.export.poptions = "-I$out_root/include" "-I$src_root/include" $patched_options
+  cxx.export.poptions = "-I$out_root/include" "-I$src_root/include" 
   cxx.export.libs = $intf_libs $extra_libs
 }
 
