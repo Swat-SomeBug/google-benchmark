@@ -33,16 +33,14 @@ tests_w_output_helpers = repetitions_test \
 
 tests_w_benchmark_main = link_main_test
 
-for n : {$basic_tests $tests_w_output_helpers}
-{
+for n : $basic_test
   ./: exe{$n}: cxx{$n} $libs
-  exe{$n}: test.options += --benchmark_min_time=0.01
-}
 
 for n : $tests_w_output_helpers
-{
-  exe{$n}: $output_helper_path/liba{output_test_helper}
-}
+  ./: exe{$n}: cxx{$n} $output_helper_path/libul{output_test_helper}
+
+for n : {$basic_tests $tests_w_output_helpers}
+exe{$n}: test.options += --benchmark_min_time=0.01
 
 if($config.lib.bin != shared)
   ./: exe{$tests_w_benchmark_main}: cxx{$tests_w_benchmark_main} $bm_main
