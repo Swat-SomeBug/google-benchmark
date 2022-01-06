@@ -6,6 +6,7 @@ license: Apache-2.0
 description-file: UPSTREAM_README.md
 url: https://github.com/google/benchmark.git
 package-email: swat.somebug@gmail.com
-depends: * build2 >= 0.13.0
-depends: * bpkg >= 0.13.0
+requires: c++11
+depends: * build2 >= 0.14.0
+depends: * bpkg >= 0.14.0
 #depends: libhello ^1.0.0
