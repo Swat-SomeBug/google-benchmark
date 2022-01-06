@@ -34,11 +34,10 @@ benchmark/hxx{benchmark}: benchmark/hxx{benchmark_orig}
 pub_hdrs = benchmark/hxx{benchmark}
 ./: $pub_hdrs
 
-
-hxx{*}:
+# Install generated header only
+hxx{*}: install = false
+hxx{benchmark/benchmark}:
 {
-  install = include/
+  install = include/benchmark/
   install.subdir = true
 }
-
-hxx{* -benchmark/benchmark_orig}: install = false
