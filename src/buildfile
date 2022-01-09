@@ -5,6 +5,7 @@ impl_libs = # Implementation dependencies.
 ./: lib{benchmark} liba{benchmark-main}
 
 pub = [dir_path] ../include
+include $pub
 pub_hdrs = $pub/{$pub_hdrs}
 
 lib{benchmark}: cxx{* -benchmark_main} hxx{*} $pub/$pub_hdrs
