@@ -37,7 +37,7 @@ for n : $basic_tests
   ./: exe{$n}: cxx{$n} $libs
 
 for n : $tests_w_output_helpers
-  ./: exe{$n}: cxx{$n} $output_helper_path/libul{output_test_helper}
+  ./: exe{$n}: cxx{$n} $output_helper_path/libue{output_test_helper}
 
 for n : {$basic_tests $tests_w_output_helpers}
 exe{$n}: test.options += --benchmark_min_time=0.01

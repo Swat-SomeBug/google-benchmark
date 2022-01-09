@@ -4,6 +4,10 @@
 #
 .build2/local/
 
+# IDEs
+.vs/
+.vscode/
+
 # Compiler/linker output.
 #
 *.d
