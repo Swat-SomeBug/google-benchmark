@@ -7,6 +7,8 @@ description-file: UPSTREAM_README.md
 url: https://github.com/google/benchmark.git
 package-email: swat.somebug@gmail.com
 requires: c++11
+builds: default
+builds: -( +msvc &!static )
 depends: * build2 >= 0.14.0
 depends: * bpkg >= 0.14.0
 #depends: libhello ^1.0.0

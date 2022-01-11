@@ -1,6 +1,6 @@
 import libs = google-benchmark%lib{benchmark}
 
-if($config.lib.bin != shared)
+if($config.bin.lib != shared)
   import bm_main = google-benchmark%liba{benchmark-main}
 
 output_helper_path = [dir_path] ./google-benchmark-internal/output_test_helper/
@@ -20,7 +20,6 @@ basic_tests = benchmark_test \
               args_product_test
 
 tests_w_output_helpers = repetitions_test \
-                         reporter_output_test \
                          templated_fixture_test \
                          user_counters_test \
                          perf_counters_test \
@@ -38,6 +37,12 @@ for n : $basic_tests
 
 for n : $tests_w_output_helpers
   ./: exe{$n}: cxx{$n} $output_helper_path/libue{output_test_helper}
+
+# reporter_output_test fails on windows due to hard coded linux path separator
+# Upstream also has the same issue. Include reporter_output_test once it is solved.
+exe{reporter_output_test}: $libs cxx{reporter_output_test}: include = ($cxx.target.class != 'windows')
+if ($cxx.target.class != 'windows')
+  ./: exe{reporter_output_test}
 
 for n : {$basic_tests $tests_w_output_helpers}
 exe{$n}: test.options += --benchmark_min_time=0.01

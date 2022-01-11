@@ -13,4 +13,13 @@ test.target = $cxx.target
 # Upstream does not support this
 # Public headers are not marked appropriately with declspec(dllimport) and declspec(dllexport)
 # Causes severe problems with linking due to static variables and inline functions in headers
-assert! ($config.bin.lib != 'static' && $cxx.target.system == 'win32-msvc') 'Google Benchmark does not support building shared libs with MSVC. Explicitly set config.bin.lib=static when using MSVC'
+if ($cxx.target.system == 'win32-msvc')
+{
+  switch $config.bin.lib
+  {
+    case 'both'
+      bin.lib = static
+    case 'shared'
+      fail 'Google Benchmark does not support building shared libs with MSVC.'
+  }
+}
