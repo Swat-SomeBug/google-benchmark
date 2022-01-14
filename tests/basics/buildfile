@@ -1,6 +1,6 @@
 import libs = google-benchmark%lib{benchmark}
 
-if($config.bin.lib != shared)
+if($bin.lib != shared)
   import bm_main = google-benchmark%liba{benchmark-main}
 
 output_helper_path = [dir_path] ./google-benchmark-internal/output_test_helper/

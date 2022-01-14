@@ -15,7 +15,7 @@ test.target = $cxx.target
 # Causes severe problems with linking due to static variables and inline functions in headers
 if ($cxx.target.system == 'win32-msvc')
 {
-  switch $config.bin.lib
+  switch $bin.lib
   {
     case 'both'
       bin.lib = static
