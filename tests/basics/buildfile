@@ -5,6 +5,7 @@ if($bin.lib != shared)
 
 output_helper_path = [dir_path] ./google-benchmark-internal/output_test_helper/
 include $output_helper_path
+helper_dpnd_hdrs = $output_helper_path/{$helper_dpnd_hdrs}
 
 basic_tests = benchmark_test \
               filter_test \
@@ -36,11 +37,11 @@ for n : $basic_tests
   ./: exe{$n}: cxx{$n} $libs
 
 for n : $tests_w_output_helpers
-  ./: exe{$n}: cxx{$n} $output_helper_path/libue{output_test_helper}
+  ./: exe{$n}: $output_helper_path/$helper_dpnd_hdrs cxx{$n} $output_helper_path/libue{output_test_helper}
 
 # reporter_output_test fails on windows due to hard coded linux path separator
 # Upstream also has the same issue. Include reporter_output_test once it is solved.
-exe{reporter_output_test}: $libs cxx{reporter_output_test}: include = ($cxx.target.class != 'windows')
+exe{reporter_output_test}: $libs $output_helper_path/$helper_dpnd_hdrs cxx{reporter_output_test}: include = ($cxx.target.class != 'windows')
 if ($cxx.target.class != 'windows')
   ./: exe{reporter_output_test}
 
