@@ -41,7 +41,9 @@ for n : $tests_w_output_helpers
 
 # reporter_output_test fails on windows due to hard coded linux path separator
 # Upstream also has the same issue. Include reporter_output_test once it is solved.
-exe{reporter_output_test}: $libs $output_helper_path/$helper_dpnd_hdrs cxx{reporter_output_test}: include = ($cxx.target.class != 'windows')
+exe{reporter_output_test}: $output_helper_path/$helper_dpnd_hdrs cxx{reporter_output_test}: include = ($cxx.target.class != 'windows')
+exe{reporter_output_test}: $output_helper_path/libue{output_test_helper}
+
 if ($cxx.target.class != 'windows')
   ./: exe{reporter_output_test}
 
@@ -56,4 +58,4 @@ exe{repetitions_test}: test.options += --benchmark_repetitions=3
 exe{perf_counters_test}: test.options += --benchmark_perf_counters=CYCLES,BRANCHES
 exe{user_counters_tabular_test}: test.options =+ --benchmark_counters_tabular=true
 
-cxx.poptions += "-I$src_base"
+cxx.poptions =+ "-I$src_base" "-I$src_base/google-benchmark-internal/output_test_helper" "-I$src_base/google-benchmark-internal/src"

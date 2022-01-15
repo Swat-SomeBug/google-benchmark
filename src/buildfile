@@ -21,8 +21,10 @@ if($cxx.target.class == 'linux')
   extra_libs += -lrt -lpthread
 elif ($cxx.target.class == 'macos')
   extra_libs += -lpthread
-elif ($cxx.target.class == 'windows')
+elif ($cxx.target.system == 'win32-msvc')
   extra_libs += shlwapi.lib
+elif ($cxx.target.system == 'mingw32')
+  extra_libs += -lshlwapi -lpthread
 
 cxx.libs = $extra_libs
 
