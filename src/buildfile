@@ -21,6 +21,8 @@ if($cxx.target.class == 'linux')
   extra_libs += -lrt -lpthread
 elif ($cxx.target.class == 'macos')
   extra_libs += -lpthread
+elif ($cxx.target.class == 'windows')
+  extra_libs += shlwapi.lib
 
 cxx.libs = $extra_libs
 
@@ -37,6 +39,9 @@ libs{benchmark}: cxx.export.poptions += -DGOOGLE_BENCHMARK_SHARED
 
 # Disable install of non-public headers
 hxx{*}: install = false
+# lib{benchmark-main} contains main which is not pulled out with msvc because no obj refers to it
+# Force include main in the final exe
+liba{benchmark-main}: bin.whole = true
 
 # For pre-releases use the complete version to make sure they cannot be used
 # in place of another pre-release or the final version. See the version module

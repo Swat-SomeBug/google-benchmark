@@ -1,5 +1,5 @@
 import libs = google-benchmark%lib{benchmark}
 
 internal_src = [dir_path] ../src
-./: liba{output_test_helper}: cxx{output_test_helper} hxx{output_test} $internal_src/hxx{**} $libs
-cxx.coptions += "-I$src_base"
+./: libue{output_test_helper}: cxx{output_test_helper} hxx{output_test} $internal_src/hxx{**} $libs
+cxx.poptions += "-I$src_base"
