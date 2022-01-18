@@ -9,7 +9,7 @@ include $pub
 pub_hdrs = $pub/{$pub_hdrs}
 
 lib{benchmark}: cxx{* -benchmark_main} hxx{*} $pub/$pub_hdrs
-liba{benchmark-main}: cxx{benchmark_main} lib{benchmark}
+liba{benchmark-main}: cxx{benchmark_main} $pub/$pub_hdrs
 
 cxx.poptions =+ "-I$out_root/include" "-I$src_root/include" 
 
@@ -30,7 +30,7 @@ cxx.libs = $extra_libs
 
 # Export options.
 #
-lib{benchmark*}:
+lib{benchmark}:
 {
   cxx.export.poptions = "-I$out_root/include" "-I$src_root/include" 
   cxx.export.libs = $intf_libs $extra_libs

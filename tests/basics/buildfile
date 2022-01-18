@@ -50,8 +50,8 @@ if ($cxx.target.class != 'windows')
 for n : {$basic_tests $tests_w_output_helpers}
 exe{$n}: test.options += --benchmark_min_time=0.01
 
-if($config.lib.bin != shared)
-  ./: exe{$tests_w_benchmark_main}: cxx{$tests_w_benchmark_main} $bm_main
+if($bin.lib != shared)
+  ./: exe{$tests_w_benchmark_main}: cxx{$tests_w_benchmark_main} $bm_main $libs
 
 exe{filter_test}: testscript{filter_test}
 exe{repetitions_test}: test.options += --benchmark_repetitions=3
