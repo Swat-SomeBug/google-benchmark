@@ -17,7 +17,7 @@ obja{*}: cxx.poptions += -DGOOGLE_BENCHMARK_STATIC_BUILD
 objs{*}: cxx.poptions += -DGOOGLE_BENCHMARK_SHARED_BUILD
 
 extra_libs =
-if($cxx.target.class == 'linux')
+if($cxx.target.class == 'linux' || $cxx.target.system == 'freebsd')
   extra_libs += -lrt -lpthread
 elif ($cxx.target.class == 'macos')
   extra_libs += -lpthread
