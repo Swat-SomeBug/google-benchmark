@@ -6,14 +6,21 @@
 # -> Public file used by other consumers, cannot turn off header extraction
 #    everywhere
 # Solution: Patch header to disable the check based on additional macro
+#           Patching is done only during package development and not online
+#           The patched version is distributed and installed.
 #----------------------------------------------------------------------
 
-benchmark/hxx{benchmark}: benchmark/hxx{benchmark_orig}
-{{
-  diag patch $<
+# Set this to true only for development to generate a new header
+# Once generated make it false again.
+# Generated header will be installed + distributed
+if false
+{
+  benchmark/hxx{benchmark}@$src_root/include/: benchmark/hxx{benchmark_orig}@$src_root/include/
+  {{
+    diag patch $<
 
-  # Replace main part but leave a tag in
-  sed -e 's/#if defined\(__COUNTER__\) \&\& \(__COUNTER__ \+ 1 == __COUNTER__ \+ 0\)/#ifdef BENCHMARK_FORCE_COUNTER_INC_TEST \
+    # Replace main part but leave a tag in
+    sed -e 's/#if defined\(__COUNTER__\) \&\& \(__COUNTER__ \+ 1 == __COUNTER__ \+ 0\)/#ifdef BENCHMARK_FORCE_COUNTER_INC_TEST \
 #if defined\(__COUNTER__\) \&\& \(__COUNTER__ + 1 == __COUNTER__ + 0\)\
 #define BENCHMARK_PRIVATE_UNIQUE_ID __COUNTER__
 #else
@@ -22,22 +29,26 @@ benchmark/hxx{benchmark}: benchmark/hxx{benchmark_orig}
 #else
 #if defined\(__COUNTER__\)/' $path($<) > $path($>) 
 
-  # Get the endif correct
-  sed -i -e 's%#define BENCHMARK_PRIVATE_UNIQUE_ID __LINE__%#define BENCHMARK_PRIVATE_UNIQUE_ID __LINE__\
+    # Get the endif correct
+    sed -i -e 's%#define BENCHMARK_PRIVATE_UNIQUE_ID __LINE__%#define BENCHMARK_PRIVATE_UNIQUE_ID __LINE__\
 #endif%' $path($>)
 
-  # Remove inserted tag
-  sed -i -e 's%BUILD2_CUSTOM_STRING_WHICH_NEEDS_REPLACING_IS_HOPEFULLY_LONG_ENOUGH%BENCHMARK_PRIVATE_UNIQUE_ID __LINE__%' $path($>)
+    # Remove inserted tag
+    sed -i -e 's%BUILD2_CUSTOM_STRING_WHICH_NEEDS_REPLACING_IS_HOPEFULLY_LONG_ENOUGH%BENCHMARK_PRIVATE_UNIQUE_ID __LINE__%' $path($>)
 
-}}
+  }}
+}
+benchmark/hxx{benchmark_orig}@./: install = false
+benchmark/hxx{benchmark_orig}@./: dist = false
 
+# Public part of the buildfile begins here
 pub_hdrs = benchmark/hxx{benchmark}
 ./: $pub_hdrs
 
 # Install generated header only
-hxx{*}: install = false
-hxx{benchmark/benchmark}:
+benchmark/hxx{benchmark}@./:
 {
   install = include/benchmark/
   install.subdir = true
+  dist = true
 }
