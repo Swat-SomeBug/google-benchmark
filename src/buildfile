@@ -2,14 +2,14 @@ intf_libs = # Interface dependencies.
 impl_libs = # Implementation dependencies.
 #import impl_libs += libhello%lib{hello}
 
-./: lib{benchmark} liba{benchmark-main}
+./: lib{benchmark} liba{benchmark_main}
 
 pub = [dir_path] ../include
 include $pub
 pub_hdrs = $pub/{$pub_hdrs}
 
 lib{benchmark}: cxx{* -benchmark_main} hxx{*} $pub/$pub_hdrs
-liba{benchmark-main}: cxx{benchmark_main} $pub/$pub_hdrs
+liba{benchmark_main}: cxx{benchmark_main} $pub/$pub_hdrs
 
 cxx.poptions =+ "-I$out_root/include" "-I$src_root/include" 
 
@@ -41,9 +41,9 @@ libs{benchmark}: cxx.export.poptions += -DGOOGLE_BENCHMARK_SHARED
 
 # Disable install of non-public headers
 hxx{*}: install = false
-# lib{benchmark-main} contains main which is not pulled out with msvc because no obj refers to it
+# lib{benchmark_main} contains main which is not pulled out with msvc because no obj refers to it
 # Force include main in the final exe
-liba{benchmark-main}: bin.whole = true
+liba{benchmark_main}: bin.whole = true
 
 # For pre-releases use the complete version to make sure they cannot be used
 # in place of another pre-release or the final version. See the version module
@@ -52,10 +52,8 @@ liba{benchmark-main}: bin.whole = true
 if $version.pre_release
 {
   lib{benchmark}: bin.lib.version = @"-$version.project_id"
-  liba{benchmark-main}: bin.lib.version = @"-$version.project_id"
 }
 else
 {
   lib{benchmark}: bin.lib.version = @"-$version.major.$version.minor"
-  lib{benchmark-main}: bin.lib.version = @"-$version.major.$version.minor"
 }
