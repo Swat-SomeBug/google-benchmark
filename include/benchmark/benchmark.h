@@ -34,7 +34,7 @@ static void BM_StringCopy(benchmark::State& state) {
 BENCHMARK(BM_StringCopy);
 
 // Augment the main() program to invoke benchmarks if specified
-// via the --benchmarks command line flag.  E.g.,
+// via the --benchmark_filter command line flag.  E.g.,
 //       my_unittest --benchmark_filter=all
 //       my_unittest --benchmark_filter=BM_StringCreation
 //       my_unittest --benchmark_filter=String
@@ -180,6 +180,7 @@ BENCHMARK(BM_test)->Unit(benchmark::kMillisecond);
 #include <cassert>
 #include <cstddef>
 #include <iosfwd>
+#include <limits>
 #include <map>
 #include <set>
 #include <string>
@@ -238,16 +239,24 @@ BENCHMARK(BM_test)->Unit(benchmark::kMillisecond);
 #define BENCHMARK_INTERNAL_TOSTRING2(x) #x
 #define BENCHMARK_INTERNAL_TOSTRING(x) BENCHMARK_INTERNAL_TOSTRING2(x)
 
+// clang-format off
 #if defined(__GNUC__) || defined(__clang__)
 #define BENCHMARK_BUILTIN_EXPECT(x, y) __builtin_expect(x, y)
 #define BENCHMARK_DEPRECATED_MSG(msg) __attribute__((deprecated(msg)))
+#define BENCHMARK_DISABLE_DEPRECATED_WARNING \
+  _Pragma("GCC diagnostic push")             \
+  _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+#define BENCHMARK_RESTORE_DEPRECATED_WARNING _Pragma("GCC diagnostic pop")
 #else
 #define BENCHMARK_BUILTIN_EXPECT(x, y) x
 #define BENCHMARK_DEPRECATED_MSG(msg)
 #define BENCHMARK_WARNING_MSG(msg)                           \
   __pragma(message(__FILE__ "(" BENCHMARK_INTERNAL_TOSTRING( \
       __LINE__) ") : warning note: " msg))
+#define BENCHMARK_DISABLE_DEPRECATED_WARNING
+#define BENCHMARK_RESTORE_DEPRECATED_WARNING
 #endif
+// clang-format on
 
 #if defined(__GNUC__) && !defined(__clang__)
 #define BENCHMARK_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
@@ -273,7 +282,6 @@ BENCHMARK(BM_test)->Unit(benchmark::kMillisecond);
 
 namespace benchmark {
 class BenchmarkReporter;
-class MemoryManager;
 
 void Initialize(int* argc, char** argv);
 void Shutdown();
@@ -282,10 +290,17 @@ void Shutdown();
 // Returns true there is at least on unrecognized argument (i.e. 'argc' > 1).
 bool ReportUnrecognizedArguments(int argc, char** argv);
 
+// Returns the current value of --benchmark_filter.
+std::string GetBenchmarkFilter();
+
 // Generate a list of benchmarks matching the specified --benchmark_filter flag
 // and if --benchmark_list_tests is specified return after printing the name
 // of each matching benchmark. Otherwise run each matching benchmark and
 // report the results.
+//
+// spec : Specify the benchmarks to run. If users do not specify this arg,
+//        then the value of FLAGS_benchmark_filter
+//        will be used.
 //
 // The second and third overload use the specified 'display_reporter' and
 //  'file_reporter' respectively. 'file_reporter' will write to the file
@@ -295,9 +310,62 @@ bool ReportUnrecognizedArguments(int argc, char** argv);
 //
 // RETURNS: The number of matching benchmarks.
 size_t RunSpecifiedBenchmarks();
+size_t RunSpecifiedBenchmarks(std::string spec);
+
 size_t RunSpecifiedBenchmarks(BenchmarkReporter* display_reporter);
 size_t RunSpecifiedBenchmarks(BenchmarkReporter* display_reporter,
+                              std::string spec);
+
+size_t RunSpecifiedBenchmarks(BenchmarkReporter* display_reporter,
                               BenchmarkReporter* file_reporter);
+size_t RunSpecifiedBenchmarks(BenchmarkReporter* display_reporter,
+                              BenchmarkReporter* file_reporter,
+                              std::string spec);
+
+// If a MemoryManager is registered (via RegisterMemoryManager()),
+// it can be used to collect and report allocation metrics for a run of the
+// benchmark.
+class MemoryManager {
+ public:
+  static const int64_t TombstoneValue;
+
+  struct Result {
+    Result()
+        : num_allocs(0),
+          max_bytes_used(0),
+          total_allocated_bytes(TombstoneValue),
+          net_heap_growth(TombstoneValue) {}
+
+    // The number of allocations made in total between Start and Stop.
+    int64_t num_allocs;
+
+    // The peak memory use between Start and Stop.
+    int64_t max_bytes_used;
+
+    // The total memory allocated, in bytes, between Start and Stop.
+    // Init'ed to TombstoneValue if metric not available.
+    int64_t total_allocated_bytes;
+
+    // The net changes in memory, in bytes, between Start and Stop.
+    // ie., total_allocated_bytes - total_deallocated_bytes.
+    // Init'ed to TombstoneValue if metric not available.
+    int64_t net_heap_growth;
+  };
+
+  virtual ~MemoryManager() {}
+
+  // Implement this to start recording allocation information.
+  virtual void Start() = 0;
+
+  // Implement this to stop recording and fill out the given Result structure.
+  BENCHMARK_DEPRECATED_MSG("Use Stop(Result&) instead")
+  virtual void Stop(Result* result) = 0;
+
+  // FIXME(vyng): Make this pure virtual once we've migrated current users.
+  BENCHMARK_DISABLE_DEPRECATED_WARNING
+  virtual void Stop(Result& result) { Stop(&result); }
+  BENCHMARK_RESTORE_DEPRECATED_WARNING
+};
 
 // Register a MemoryManager instance that will be used to collect and report
 // allocation measurements for benchmark runs.
@@ -385,27 +453,27 @@ class Counter {
     kDefaults = 0,
     // Mark the counter as a rate. It will be presented divided
     // by the duration of the benchmark.
-    kIsRate = 1U << 0U,
+    kIsRate = 1 << 0,
     // Mark the counter as a thread-average quantity. It will be
     // presented divided by the number of threads.
-    kAvgThreads = 1U << 1U,
+    kAvgThreads = 1 << 1,
     // Mark the counter as a thread-average rate. See above.
     kAvgThreadsRate = kIsRate | kAvgThreads,
     // Mark the counter as a constant value, valid/same for *every* iteration.
     // When reporting, it will be *multiplied* by the iteration count.
-    kIsIterationInvariant = 1U << 2U,
+    kIsIterationInvariant = 1 << 2,
     // Mark the counter as a constant rate.
     // When reporting, it will be *multiplied* by the iteration count
     // and then divided by the duration of the benchmark.
     kIsIterationInvariantRate = kIsRate | kIsIterationInvariant,
     // Mark the counter as a iteration-average quantity.
     // It will be presented divided by the number of iterations.
-    kAvgIterations = 1U << 3U,
+    kAvgIterations = 1 << 3,
     // Mark the counter as a iteration-average rate. See above.
     kAvgIterationsRate = kIsRate | kAvgIterations,
 
     // In the end, invert the result. This is always done last!
-    kInvert = 1U << 31U
+    kInvert = 1 << 31
   };
 
   enum OneK {
@@ -423,7 +491,7 @@ class Counter {
   Counter(double v = 0., Flags f = kDefaults, OneK k = kIs1000)
       : value(v), flags(f), oneK(k) {}
 
-  BENCHMARK_ALWAYS_INLINE operator double const&() const { return value; }
+  BENCHMARK_ALWAYS_INLINE operator double const &() const { return value; }
   BENCHMARK_ALWAYS_INLINE operator double&() { return value; }
 };
 
@@ -706,7 +774,7 @@ class State {
   bool finished_;
   bool error_occurred_;
 
- private:  // items we don't need on the first cache line
+  // items we don't need on the first cache line
   std::vector<int64_t> range_;
 
   int64_t complexity_n_;
@@ -901,6 +969,23 @@ class Benchmark {
     return Ranges(ranges);
   }
 
+  // Have "setup" and/or "teardown" invoked once for every benchmark run.
+  // If the benchmark is multi-threaded (will run in k threads concurrently),
+  // the setup callback will be be invoked exactly once (not k times) before
+  // each run with k threads. Time allowing (e.g. for a short benchmark), there
+  // may be multiple such runs per benchmark, each run with its own
+  // "setup"/"teardown".
+  //
+  // If the benchmark uses different size groups of threads (e.g. via
+  // ThreadRange), the above will be true for each size group.
+  //
+  // The callback will be passed a State object, which includes the number
+  // of threads, thread-index, benchmark arguments, etc.
+  //
+  // The callback must not be NULL or self-deleting.
+  Benchmark* Setup(void (*setup)(const benchmark::State&));
+  Benchmark* Teardown(void (*teardown)(const benchmark::State&));
+
   // Pass this benchmark object to *func, which can customize
   // the benchmark by calling various methods like Arg, Args,
   // Threads, etc.
@@ -969,7 +1054,8 @@ class Benchmark {
   Benchmark* Complexity(BigOFunc* complexity);
 
   // Add this statistics to be computed over all the values of benchmark run
-  Benchmark* ComputeStatistics(std::string name, StatisticsFunc* statistics,
+  Benchmark* ComputeStatistics(const std::string& name,
+                               StatisticsFunc* statistics,
                                StatisticUnit unit = kTime);
 
   // Support for running multiple copies of the same benchmark concurrently
@@ -1032,6 +1118,10 @@ class Benchmark {
   std::vector<Statistics> statistics_;
   std::vector<int> thread_counts_;
 
+  typedef void (*callback_function)(const benchmark::State&);
+  callback_function setup_;
+  callback_function teardown_;
+
   Benchmark& operator=(Benchmark const&);
 };
 
@@ -1080,8 +1170,7 @@ class LambdaBenchmark : public Benchmark {
 
   LambdaBenchmark(LambdaBenchmark const&) = delete;
 
- private:
-  template <class Lam>
+  template <class Lam>  // NOLINTNEXTLINE(readability-redundant-declaration)
   friend Benchmark* ::benchmark::RegisterBenchmark(const char*, Lam&&);
 
   Lambda lambda_;
@@ -1163,22 +1252,37 @@ class Fixture : public internal::Benchmark {
 #endif
 
 // Helpers for generating unique variable names
+#ifdef BENCHMARK_HAS_CXX11
+#define BENCHMARK_PRIVATE_NAME(...)                                      \
+  BENCHMARK_PRIVATE_CONCAT(benchmark_uniq_, BENCHMARK_PRIVATE_UNIQUE_ID, \
+                           __VA_ARGS__)
+#else
 #define BENCHMARK_PRIVATE_NAME(n) \
   BENCHMARK_PRIVATE_CONCAT(benchmark_uniq_, BENCHMARK_PRIVATE_UNIQUE_ID, n)
+#endif  // BENCHMARK_HAS_CXX11
+
 #define BENCHMARK_PRIVATE_CONCAT(a, b, c) BENCHMARK_PRIVATE_CONCAT2(a, b, c)
 #define BENCHMARK_PRIVATE_CONCAT2(a, b, c) a##b##c
 // Helper for concatenation with macro name expansion
 #define BENCHMARK_PRIVATE_CONCAT_NAME(BaseClass, Method) \
-    BaseClass##_##Method##_Benchmark
+  BaseClass##_##Method##_Benchmark
 
 #define BENCHMARK_PRIVATE_DECLARE(n)                                 \
   static ::benchmark::internal::Benchmark* BENCHMARK_PRIVATE_NAME(n) \
       BENCHMARK_UNUSED
 
+#ifdef BENCHMARK_HAS_CXX11
+#define BENCHMARK(...)                                               \
+  BENCHMARK_PRIVATE_DECLARE(_benchmark_) =                           \
+      (::benchmark::internal::RegisterBenchmarkInternal(             \
+          new ::benchmark::internal::FunctionBenchmark(#__VA_ARGS__, \
+                                                       &__VA_ARGS__)))
+#else
 #define BENCHMARK(n)                                     \
   BENCHMARK_PRIVATE_DECLARE(n) =                         \
       (::benchmark::internal::RegisterBenchmarkInternal( \
           new ::benchmark::internal::FunctionBenchmark(#n, n)))
+#endif  // BENCHMARK_HAS_CXX11
 
 // Old-style macros
 #define BENCHMARK_WITH_ARG(n, a) BENCHMARK(n)->Arg((a))
@@ -1242,7 +1346,7 @@ class Fixture : public internal::Benchmark {
 #define BENCHMARK_PRIVATE_DECLARE_F(BaseClass, Method)                  \
   class BaseClass##_##Method##_Benchmark : public BaseClass {           \
    public:                                                              \
-    BaseClass##_##Method##_Benchmark() : BaseClass() {                  \
+    BaseClass##_##Method##_Benchmark() {                                \
       this->SetName(#BaseClass "/" #Method);                            \
     }                                                                   \
                                                                         \
@@ -1253,7 +1357,7 @@ class Fixture : public internal::Benchmark {
 #define BENCHMARK_TEMPLATE1_PRIVATE_DECLARE_F(BaseClass, Method, a)     \
   class BaseClass##_##Method##_Benchmark : public BaseClass<a> {        \
    public:                                                              \
-    BaseClass##_##Method##_Benchmark() : BaseClass<a>() {               \
+    BaseClass##_##Method##_Benchmark() {                                \
       this->SetName(#BaseClass "<" #a ">/" #Method);                    \
     }                                                                   \
                                                                         \
@@ -1264,7 +1368,7 @@ class Fixture : public internal::Benchmark {
 #define BENCHMARK_TEMPLATE2_PRIVATE_DECLARE_F(BaseClass, Method, a, b)  \
   class BaseClass##_##Method##_Benchmark : public BaseClass<a, b> {     \
    public:                                                              \
-    BaseClass##_##Method##_Benchmark() : BaseClass<a, b>() {            \
+    BaseClass##_##Method##_Benchmark() {                                \
       this->SetName(#BaseClass "<" #a "," #b ">/" #Method);             \
     }                                                                   \
                                                                         \
@@ -1276,7 +1380,7 @@ class Fixture : public internal::Benchmark {
 #define BENCHMARK_TEMPLATE_PRIVATE_DECLARE_F(BaseClass, Method, ...)       \
   class BaseClass##_##Method##_Benchmark : public BaseClass<__VA_ARGS__> { \
    public:                                                                 \
-    BaseClass##_##Method##_Benchmark() : BaseClass<__VA_ARGS__>() {        \
+    BaseClass##_##Method##_Benchmark() {                                   \
       this->SetName(#BaseClass "<" #__VA_ARGS__ ">/" #Method);             \
     }                                                                      \
                                                                            \
@@ -1366,11 +1470,7 @@ struct CPUInfo {
     int num_sharing;
   };
 
-  enum Scaling {
-    UNKNOWN,
-    ENABLED,
-    DISABLED
-  };
+  enum Scaling { UNKNOWN, ENABLED, DISABLED };
 
   int num_cpus;
   Scaling scaling;
@@ -1447,10 +1547,8 @@ class BenchmarkReporter {
           complexity_n(0),
           report_big_o(false),
           report_rms(false),
-          counters(),
-          has_memory_result(false),
-          allocs_per_iter(0.0),
-          max_bytes_used(0) {}
+          memory_result(NULL),
+          allocs_per_iter(0.0) {}
 
     std::string benchmark_name() const;
     BenchmarkName run_name;
@@ -1501,9 +1599,8 @@ class BenchmarkReporter {
     UserCounters counters;
 
     // Memory metrics.
-    bool has_memory_result;
+    const MemoryManager::Result* memory_result;
     double allocs_per_iter;
-    int64_t max_bytes_used;
   };
 
   struct PerFamilyRunReports {
@@ -1586,10 +1683,7 @@ class ConsoleReporter : public BenchmarkReporter {
     OO_Defaults = OO_ColorTabular
   };
   explicit ConsoleReporter(OutputOptions opts_ = OO_Defaults)
-      : output_options_(opts_),
-        name_field_width_(0),
-        prev_counters_(),
-        printed_header_(false) {}
+      : output_options_(opts_), name_field_width_(0), printed_header_(false) {}
 
   virtual bool ReportContext(const Context& context) BENCHMARK_OVERRIDE;
   virtual void ReportRuns(const std::vector<Run>& reports) BENCHMARK_OVERRIDE;
@@ -1632,29 +1726,6 @@ class BENCHMARK_DEPRECATED_MSG(
   std::set<std::string> user_counter_names_;
 };
 
-// If a MemoryManager is registered, it can be used to collect and report
-// allocation metrics for a run of the benchmark.
-class MemoryManager {
- public:
-  struct Result {
-    Result() : num_allocs(0), max_bytes_used(0) {}
-
-    // The number of allocations made in total between Start and Stop.
-    int64_t num_allocs;
-
-    // The peak memory use between Start and Stop.
-    int64_t max_bytes_used;
-  };
-
-  virtual ~MemoryManager() {}
-
-  // Implement this to start recording allocation information.
-  virtual void Start() = 0;
-
-  // Implement this to stop recording and fill out the given Result structure.
-  virtual void Stop(Result* result) = 0;
-};
-
 inline const char* GetTimeUnitString(TimeUnit unit) {
   switch (unit) {
     case kSecond:
@@ -1695,8 +1766,7 @@ inline double GetTimeUnitMultiplier(TimeUnit unit) {
 std::vector<int64_t> CreateRange(int64_t lo, int64_t hi, int multi);
 
 // Creates a list of integer values for the given range and step.
-std::vector<int64_t> CreateDenseRange(int64_t start, int64_t limit,
-                                      int step);
+std::vector<int64_t> CreateDenseRange(int64_t start, int64_t limit, int step);
 
 }  // namespace benchmark
 
