@@ -15,7 +15,7 @@
 # Generated header will be installed + distributed
 if false
 {
-  benchmark/hxx{benchmark}@$src_root/include/: benchmark/hxx{benchmark_orig}@$src_root/include/
+  benchmark/hxx{benchmark}: benchmark/hxx{benchmark_orig}
   {{
     diag patch $<
 
@@ -36,19 +36,26 @@ if false
     # Remove inserted tag
     sed -i -e 's%BUILD2_CUSTOM_STRING_WHICH_NEEDS_REPLACING_IS_HOPEFULLY_LONG_ENOUGH%BENCHMARK_PRIVATE_UNIQUE_ID __LINE__%' $path($>)
 
+    # Move to source src_base
+    mv $path($>) $src_base/benchmark/
+
+    exit 'Created new header all sources should be recompiled. This is an intentional build fail.'
+
   }}
 }
-benchmark/hxx{benchmark_orig}@./: install = false
-benchmark/hxx{benchmark_orig}@./: dist = false
 
-# Public part of the buildfile begins here
+# # Public part of the buildfile begins here
 pub_hdrs = benchmark/hxx{benchmark}
 ./: $pub_hdrs
 
 # Install generated header only
-benchmark/hxx{benchmark}@./:
+hxx{*}:
 {
   install = include/benchmark/
   install.subdir = true
   dist = true
 }
+
+benchmark/hxx{benchmark_orig}@./: install = false
+benchmark/hxx{benchmark_orig}@./: dist = false
+
