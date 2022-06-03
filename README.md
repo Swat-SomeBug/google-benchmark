@@ -11,3 +11,9 @@ __Note:__ the installed header file is compatible with upstream and can be used 
 
 `google-benchmark` does not support building shared libs on Windows when compiling with MSVC.
 This package will issue an error in case `config.bin.lib=shared`. When `config.bin.lib=both`, only `liba{benchmark}` is built.
+
+## For dev
+For every new package release where upstream changes `benchmark/benchmark.h`
+- Delete `include/benchmark/benchmark.h`
+- Set the `if false` to `if true` in `include/buildfile` and run the build to regenerate the patched header
+- Set `if true` to `if false` again post regeneration
