@@ -3,7 +3,7 @@ $out_root/
   include src/
 }
 
-if ($($out_root/src/ cxx.target.system) == 'win32-msvc')
-  assert ($import.target != libs{benchmark}) 'Google Benchmark only supports static library when using MSVC.'
+if ($($out_root/src/ cxx.target.class) == 'windows')
+  assert ($import.target != libs{benchmark}) 'Google Benchmark only supports static library on windows.'
   
 export $out_root/src/$import.target
