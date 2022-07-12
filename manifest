@@ -1,6 +1,6 @@
 : 1
 name: google-benchmark
-version: 1.6.1-a.0.z
+version: 1.6.1
 summary: Build2 package for google benchmark
 license: Apache-2.0
 description-file: UPSTREAM_README.md
