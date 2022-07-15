@@ -41,17 +41,16 @@ for n : $tests_w_output_helpers
 
 # reporter_output_test fails on windows due to hard coded linux path separator
 # Upstream also has the same issue. Include reporter_output_test once it is solved.
-exe{reporter_output_test}: $output_helper_path/$helper_dpnd_hdrs cxx{reporter_output_test}: include = ($cxx.target.class != 'windows')
+exe{reporter_output_test}: $output_helper_path/$helper_dpnd_hdrs cxx{reporter_output_test}
 exe{reporter_output_test}: $output_helper_path/libue{output_test_helper}
 
-if ($cxx.target.class != 'windows')
-  ./: exe{reporter_output_test}
+./: exe{reporter_output_test}: include = ($cxx.target.class != 'windows')
 
 for n : {$basic_tests $tests_w_output_helpers}
 exe{$n}: test.options += --benchmark_min_time=0.01
 
-if($bin.lib != shared)
-  ./: exe{$tests_w_benchmark_main}: cxx{$tests_w_benchmark_main} $bm_main $libs
+exe{$tests_w_benchmark_main}: cxx{$tests_w_benchmark_main} $bm_main $libs
+./: exe{$tests_w_benchmark_main}: include = ($bin.lib != shared)
 
 exe{filter_test}: testscript{filter_test}
 exe{repetitions_test}: test.options += --benchmark_repetitions=3
