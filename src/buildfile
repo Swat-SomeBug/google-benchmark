@@ -9,12 +9,12 @@ include $pub
 pub_hdrs = $pub/{$pub_hdrs}
 
 lib{benchmark}: cxx{* -benchmark_main} hxx{*} $pub/$pub_hdrs
-liba{benchmark_main}: cxx{benchmark_main} $pub/$pub_hdrs
+lib{benchmark_main}: cxx{benchmark_main} lib{benchmark}
 
 cxx.poptions =+ "-I$out_root/include" "-I$src_root/include" 
 
-obja{*}: cxx.poptions += -DGOOGLE_BENCHMARK_STATIC_BUILD
-objs{*}: cxx.poptions += -DGOOGLE_BENCHMARK_SHARED_BUILD
+obja{*}: cxx.poptions += -DBENCHMARK_STATIC_DEFINE
+objs{*}: cxx.poptions += -Dbenchmark_EXPORTS
 
 extra_libs =
 if($cxx.target.class == 'linux' || $cxx.target.system == 'freebsd')
@@ -26,24 +26,32 @@ elif ($cxx.target.system == 'win32-msvc')
 elif ($cxx.target.system == 'mingw32')
   extra_libs += -lshlwapi -lpthread
 
-cxx.libs = $extra_libs
+cxx.libs = $intf_libs $extra_libs
 
 # Export options.
 #
-lib{benchmark}:
+lib{benchmark*}:
 {
   cxx.export.poptions = "-I$out_root/include" "-I$src_root/include" 
   cxx.export.libs = $intf_libs $extra_libs
 }
 
-liba{benchmark}: cxx.export.poptions += -DGOOGLE_BENCHMARK_STATIC
-libs{benchmark}: cxx.export.poptions += -DGOOGLE_BENCHMARK_SHARED
+liba{benchmark*}: cxx.export.poptions += -DBENCHMARK_STATIC_DEFINE
+# libs{benchmark}: cxx.export.poptions += -DGOOGLE_BENCHMARK_SHARED
+
+libs{benchmark_main}: cxx.export.libs += lib{benchmark}
+
+# Force msvc to pull out main symbol even for installed version of package
+# if($cxx.target.system == 'win32-msvc')
+#     lib{benchmark_main}: cxx.export.loptions += /INCLUDE:main
 
 # Disable install of non-public headers
 hxx{*}: install = false
 # lib{benchmark_main} contains main which is not pulled out with msvc because no obj refers to it
 # Force include main in the final exe
-liba{benchmark_main}: bin.whole = true
+# liba{benchmark_main}: bin.whole = true
+
+
 
 # For pre-releases use the complete version to make sure they cannot be used
 # in place of another pre-release or the final version. See the version module

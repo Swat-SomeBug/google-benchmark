@@ -45,7 +45,7 @@ if false
 }
 
 # # Public part of the buildfile begins here
-pub_hdrs = benchmark/hxx{benchmark}
+pub_hdrs = benchmark/hxx{benchmark export}
 ./: $pub_hdrs
 
 # Install generated header only
