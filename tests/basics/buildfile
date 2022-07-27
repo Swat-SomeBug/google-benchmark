@@ -31,8 +31,10 @@ tests_w_output_helpers = repetitions_test \
 
 tests_w_benchmark_main = link_main_test
 
+cxx.poptions =+ "-I$src_base" "-I$src_base/google-benchmark-internal/output_test_helper" "-I$src_base/google-benchmark-internal/src"
+
 for n : $basic_tests
-  ./: exe{$n}: cxx{$n} $bm_main
+  ./: exe{$n}: cxx{$n} $libs
 
 for n : $tests_w_output_helpers
   ./: exe{$n}: $output_helper_path/$helper_dpnd_hdrs cxx{$n} $output_helper_path/libue{output_test_helper}
@@ -49,6 +51,8 @@ for n : {$basic_tests $tests_w_output_helpers}
 exe{$n}: test.options += --benchmark_min_time=0.01
 
 ./: exe{$tests_w_benchmark_main}: cxx{$tests_w_benchmark_main} $bm_main
+if($cxx.target.system == 'win32-msvc')
+  exe{$tests_w_benchmark_main}: cxx.loptions += '/subsystem:console'
 
 exe{filter_test}: testscript{filter_test}
 exe{repetitions_test}: test.options += --benchmark_repetitions=3
@@ -62,4 +66,3 @@ exe{spec_arg_test}: test.options += --benchmark_filter=BM_NotChose
 exe{spec_arg_verbosity}: cxx{spec_arg_verbosity} $libs
 exe{spec_arg_verbosity}: test.options += --v=42
 
-cxx.poptions =+ "-I$src_base" "-I$src_base/google-benchmark-internal/output_test_helper" "-I$src_base/google-benchmark-internal/src"

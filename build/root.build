@@ -9,17 +9,3 @@ cxx{*}: extension = cc
 #
 test.target = $cxx.target
 
-# Disable support for building shared libs on windows with msvc
-# Upstream does not support this
-# Public headers are not marked appropriately with declspec(dllimport) and declspec(dllexport)
-# Causes severe problems with linking due to static variables and inline functions in headers
-if ($cxx.target.class == 'windows')
-{
-  switch $bin.lib
-  {
-    case 'both'
-      bin.lib = static
-    case 'shared'
-      fail 'Google Benchmark does not support building shared libs on windows.'
-  }
-}

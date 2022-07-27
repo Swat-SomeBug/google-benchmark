@@ -2,16 +2,23 @@ intf_libs = # Interface dependencies.
 impl_libs = # Implementation dependencies.
 #import impl_libs += libhello%lib{hello}
 
-./: lib{benchmark} liba{benchmark_main}
+./: lib{benchmark} lib{benchmark_main}
 
 pub = [dir_path] ../include
 include $pub
 pub_hdrs = $pub/{$pub_hdrs}
 
-lib{benchmark}: cxx{* -benchmark_main} hxx{*} $pub/$pub_hdrs
-lib{benchmark_main}: cxx{benchmark_main} lib{benchmark}
+libul{benchmark}: cxx{* -benchmark_main} hxx{*} $pub/$pub_hdrs
+lib{benchmark}: libul{benchmark}
+lib{benchmark_main}: cxx{benchmark_main} libul{benchmark}
 
 cxx.poptions =+ "-I$out_root/include" "-I$src_root/include" 
+
+windows_additional_defines = 
+if($cxx.target.system == 'win32-msvc')
+  windows_additional_defines = '/D_CRT_SECURE_NO_WARNINGS'
+
+cxx.poptions += $windows_additional_defines
 
 obja{*}: cxx.poptions += -DBENCHMARK_STATIC_DEFINE
 objs{*}: cxx.poptions += -Dbenchmark_EXPORTS
@@ -32,25 +39,19 @@ cxx.libs = $intf_libs $extra_libs
 #
 lib{benchmark*}:
 {
-  cxx.export.poptions = "-I$out_root/include" "-I$src_root/include" 
+  cxx.export.poptions += "-I$out_root/include" "-I$src_root/include" $windows_additional_defines
   cxx.export.libs = $intf_libs $extra_libs
 }
+liba{benchmark}: cxx.export.poptions =+ -DBENCHMARK_STATIC_DEFINE
+liba{benchmark_main}: cxx.export.poptions =+ -DBENCHMARK_STATIC_DEFINE
 
-liba{benchmark*}: cxx.export.poptions += -DBENCHMARK_STATIC_DEFINE
-# libs{benchmark}: cxx.export.poptions += -DGOOGLE_BENCHMARK_SHARED
+# lib{benchmark_main} contains main which is not pulled out with msvc because no obj refers to it
+# Force include main in the final exe
+liba{benchmark_main}: bin.whole = true
 
-libs{benchmark_main}: cxx.export.libs += lib{benchmark}
-
-# Force msvc to pull out main symbol even for installed version of package
-# if($cxx.target.system == 'win32-msvc')
-#     lib{benchmark_main}: cxx.export.loptions += /INCLUDE:main
 
 # Disable install of non-public headers
 hxx{*}: install = false
-# lib{benchmark_main} contains main which is not pulled out with msvc because no obj refers to it
-# Force include main in the final exe
-# liba{benchmark_main}: bin.whole = true
-
 
 
 # For pre-releases use the complete version to make sure they cannot be used
