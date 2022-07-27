@@ -61,8 +61,10 @@ hxx{*}: install = false
 if $version.pre_release
 {
   lib{benchmark}: bin.lib.version = @"-$version.project_id"
+  lib{benchmark_main}: bin.lib.version = @"-$version.project_id"
 }
 else
 {
   lib{benchmark}: bin.lib.version = @"-$version.major.$version.minor"
+  lib{benchmark_main}: bin.lib.version = @"-$version.major.$version.minor"
 }
