@@ -16,7 +16,7 @@ cxx.poptions =+ "-I$out_root/include" "-I$src_root/include"
 
 windows_additional_defines = 
 if($cxx.target.system == 'win32-msvc')
-  windows_additional_defines = '/D_CRT_SECURE_NO_WARNINGS'
+  windows_additional_defines = '-D_CRT_SECURE_NO_WARNINGS'
 
 cxx.poptions += $windows_additional_defines
 
