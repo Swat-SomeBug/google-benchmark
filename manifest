@@ -7,9 +7,10 @@ description-file: UPSTREAM_README.md
 url: https://github.com/google/benchmark.git
 package-email: swat.somebug@gmail.com
 requires: c++11
-builds: default
-build-exclude: windows**mingw** ; user_counters_tabular_test exists aborts with incorrect regex. Works with msvc
-build-exclude: windows**clang** ; user_counters_tabular_test exists aborts with incorrect regex. Works with msvc
+# builds: default
+# build-exclude: windows**mingw** ; user_counters_tabular_test exists aborts with incorrect regex. Works with msvc
+# build-exclude: windows**clang** ; user_counters_tabular_test exists aborts with incorrect regex. Works with msvc
+build-exclude: **-**-ndebug* ; Requires special define to be passed as well. Will not work with default config + ndebug option
 depends: * build2 >= 0.14.0
 depends: * bpkg >= 0.14.0
 #depends: libhello ^1.0.0
