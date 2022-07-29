@@ -1,6 +1,9 @@
 # Google-Benchmark
 Build2 package for [google-benchmark](https://github.com/google/benchmark.git)
 
+This package exports `lib{benchmark}` and `liba{benchmark_main}` targets. Linking against `liba{benchmark_main}` automatically links with `lib{benchmark}`. Consumers would mostly link against `lib{benchmark}` and calling `BENCHMARK_MAIN()` in one translation unit.
+If consumers don't define want to or cannot call `BENCHMARK_MAIN()` then linking against `liba{benchmark_main}` allows `main` to be defined.
+
 The package uses and installs a patched version of `benchmark/benchmark.h` in order to build with `gcc`. The issue is summarized below.
  1. `gcc` errors out if macros are expanded when `-fdirectives_only` is used
  2. `build2` passes this flag for the header extraction which can be turned off while building `google-benchmark` itself.
