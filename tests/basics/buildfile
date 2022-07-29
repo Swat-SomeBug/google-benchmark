@@ -1,5 +1,5 @@
 import libs = google-benchmark%lib{benchmark}
-import bm_main = google-benchmark%lib{benchmark_main}
+import bm_main = google-benchmark%liba{benchmark_main}
 
 output_helper_path = [dir_path] ./google-benchmark-internal/output_test_helper/
 include $output_helper_path
