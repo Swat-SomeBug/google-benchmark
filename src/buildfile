@@ -13,11 +13,8 @@ liba{benchmark_main}: cxx{benchmark_main} lib{benchmark}
 
 cxx.poptions =+ "-I$out_root/include" "-I$src_root/include" 
 
-# windows_additional_defines = 
-# if($cxx.target.system == 'win32-msvc')
-#   windows_additional_defines = '-D_CRT_SECURE_NO_WARNINGS'
-
-# cxx.poptions += $windows_additional_defines
+if($cxx.target.system == 'win32-msvc')
+  cxx.poptions += '-D_CRT_SECURE_NO_WARNINGS' # Internal, not exported
 
 obja{*}: cxx.poptions += -DBENCHMARK_STATIC_DEFINE
 objs{*}: cxx.poptions += -Dbenchmark_EXPORTS
@@ -38,7 +35,6 @@ cxx.libs = $intf_libs $extra_libs
 #
 lib{benchmark}:
 {
-  # cxx.export.poptions += "-I$out_root/include" "-I$src_root/include" $windows_additional_defines
   cxx.export.poptions += "-I$out_root/include" "-I$src_root/include"
   cxx.export.libs = $intf_libs $extra_libs
 }
@@ -64,10 +60,8 @@ hxx{*}: install = false
 if $version.pre_release
 {
   lib{benchmark}: bin.lib.version = @"-$version.project_id"
-  liba{benchmark_main}: bin.lib.version = @"-$version.project_id"
 }
 else
 {
   lib{benchmark}: bin.lib.version = @"-$version.major.$version.minor"
-  liba{benchmark_main}: bin.lib.version = @"-$version.major.$version.minor"
 }
