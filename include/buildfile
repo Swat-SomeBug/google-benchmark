@@ -56,6 +56,6 @@ hxx{*}:
   dist = true
 }
 
-benchmark/hxx{benchmark_orig}@./: install = false
-benchmark/hxx{benchmark_orig}@./: dist = false
+benchmark/hxx{benchmark_orig}@benchmark/: install = true
+benchmark/hxx{benchmark_orig}@benchmark/: dist = true
 
