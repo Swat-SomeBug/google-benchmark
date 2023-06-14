@@ -13,6 +13,8 @@ register_benchmark_test
 map_test
 multiple_ranges_test
 args_product_test
+benchmark_min_time_flag_iters_test
+benchmark_min_time_flag_time_test
 
 # Link with output helper
 repetitions_test

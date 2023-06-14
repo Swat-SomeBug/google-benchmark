@@ -16,7 +16,9 @@ basic_tests = benchmark_test \
               register_benchmark_test \
               map_test \
               multiple_ranges_test \
-              args_product_test
+              args_product_test \
+              benchmark_min_time_flag_iters_test \
+              benchmark_min_time_flag_time_test
 
 tests_w_output_helpers = repetitions_test \
                          templated_fixture_test \
@@ -47,7 +49,7 @@ exe{reporter_output_test}: $output_helper_path/libue{output_test_helper}
 ./: exe{reporter_output_test}: include = ($cxx.target.class != 'windows')
 
 for n : {$basic_tests $tests_w_output_helpers}
-exe{$n}: test.options += --benchmark_min_time=0.01
+exe{$n}: test.options += --benchmark_min_time=0.01s
 
 ./: exe{$tests_w_benchmark_main}: cxx{$tests_w_benchmark_main} $bm_main
 if($cxx.target.system == 'win32-msvc')
